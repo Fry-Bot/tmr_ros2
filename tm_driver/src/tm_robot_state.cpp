@@ -133,17 +133,20 @@ TmRobotState::~TmRobotState()
 	delete _data_table;
 }
 
-void TmRobotState::set_joint_states(const std::vector<double> &pos, const std::vector<double> &vel, const std::vector<double> &tor)
+void TmRobotState::set_fake_joint_states(const std::vector<double> &pos, const std::vector<double> &vel, const std::vector<double> &tor)
 {
 	// joint_angle() = pos;
 	// joint_speed() = vel;
 	// joint_torque() = tor;
+
+	tmRobotStateDataToPublish = multiThreadCache.get_catch_data();
+
 	for (size_t i = 0; i < 6; ++i) {
-		tmRobotStateDataFromEthernet.joint_angle[i] = pos[i] * (180.0 / M_PI);
-		tmRobotStateDataFromEthernet.joint_speed[i] = vel[i];
-		tmRobotStateDataFromEthernet.joint_torque[i] = tor[i];
+		tmRobotStateDataToPublish.joint_angle[i] = pos[i] * (180.0 / M_PI);
+		tmRobotStateDataToPublish.joint_speed[i] = vel[i];
+		tmRobotStateDataToPublish.joint_torque[i] = tor[i];
 	}
-	multiThreadCache.set_catch_data(tmRobotStateDataFromEthernet);
+	multiThreadCache.set_catch_data(tmRobotStateDataToPublish);
 }
 
 std::vector<double> TmRobotState::mtx_tcp_force_vec()
