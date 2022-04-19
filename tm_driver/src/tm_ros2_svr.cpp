@@ -46,7 +46,11 @@ TmSvrRos2::TmSvrRos2(rclcpp::Node::SharedPtr node, TmDriver &iface, bool is_fake
             std::placeholders::_1, std::placeholders::_2));
     } else {
       std::vector<double> zeros(state_.DOF);
-      state_.set_fake_joint_states(zeros, zeros, zeros);
+      std::vector<double> joints(state_.DOF);
+      joints[2] = 3.14 / 2;
+      joints[4] = 3.14 / 2;
+      joints[5] = 3.14 / 2;
+      state_.set_fake_joint_states(joints, zeros, zeros);
       pubDataTimer = node->create_wall_timer(
         std::chrono::milliseconds(publishTimeMs), std::bind(&TmSvrRos2::pub_data, this));
     }
@@ -152,9 +156,9 @@ void TmSvrRos2::fake_publisher()
     PubMsg &pm = pm_;
     TmRobotState &state = state_;
 
-    print_info("TM_ROS: fake publisher thread begin");		
+    // print_info("TM_ROS: fake publisher thread begin");		
 
-    while (rclcpp::ok()) {
+    // while (rclcpp::ok()) {
       // Publish feedback state
       pm.fbs_msg.header.stamp = node->rclcpp::Node::now();
       {
@@ -171,9 +175,9 @@ void TmSvrRos2::fake_publisher()
       pm.joint_msg.effort = pm.fbs_msg.joint_tor;
       pm.joint_pub->publish(pm.joint_msg);
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-    print_info("TM_ROS: fake publisher thread end\n");	
+    //   std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    // }
+    // print_info("TM_ROS: fake publisher thread end\n");	
 }
 void TmSvrRos2::pub_data(){
   
