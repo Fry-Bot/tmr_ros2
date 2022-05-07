@@ -143,7 +143,7 @@ void TmRos2SctMoveit::handle_accepted_joint_trajectory(
 void TmRos2SctMoveit::execute_joint_traj(
 const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle
 ) {
-   print_info("TM_ROS: trajectory thread begin");
+   print_info("TM_ROS: joint trajectory thread begin");
 
   auto result = std::make_shared<control_msgs::action::JointTrajectory::Result>();
 
