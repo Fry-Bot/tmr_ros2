@@ -12,24 +12,18 @@ void TmRos2SctMoveit::intial_action(){
     );
     goal_id_.clear();
     has_goal_ = false;
-    print_info("Setting up asjt");
-    asjt_ = node->create_subscription<trajectory_msgs::msg::JointTrajectory>(
-      // node,
-      "tmr_arm_controller/joint_trajectory",
-      rclcpp::QoS(10),
-      std::bind(&TmRos2SctMoveit::execute_joint_traj, this, std::placeholders::_1)
+
+    asjt_ = rclcpp_action::create_server<control_msgs::action::JointTrajectory>(
+     node->get_node_base_interface(),
+     node->get_node_clock_interface(),
+     node->get_node_logging_interface(),
+     node->get_node_waitables_interface(),
+     "tmr_arm_controller/joint_trajectory",
+     std::bind(&TmRos2SctMoveit::handle_goal_joint_trajectory, this, std::placeholders::_1, std::placeholders::_2),
+     std::bind(&TmRos2SctMoveit::handle_cancel_joint_trajectory, this, std::placeholders::_1),
+     std::bind(&TmRos2SctMoveit::handle_accepted_joint_trajectory, this, std::placeholders::_1)
     );
 
-    // asjt_ = rclcpp_action::create_server<control_msgs::action::JointTrajectory>(
-    //  node->get_node_base_interface(),
-    //  node->get_node_clock_interface(),
-    //  node->get_node_logging_interface(),
-    //  node->get_node_waitables_interface(),
-    //  "tmr_arm_controller/joint_trajectory",
-    //  std::bind(&TmRos2SctMoveit::handle_goal_joint_trajectory, this, std::placeholders::_1, std::placeholders::_2),
-    //  std::bind(&TmRos2SctMoveit::handle_cancel_joint_trajectory, this, std::placeholders::_1),
-    //  std::bind(&TmRos2SctMoveit::handle_accepted_joint_trajectory, this, std::placeholders::_1)
-    // );
     print_info("asjt is set up");
 }
 
@@ -91,8 +85,9 @@ void TmRos2SctMoveit::handle_accepted(
 
 }
 
-void TmRos2SctMoveit::execute_joint_traj(
-const std::shared_ptr<trajectory_msgs::msg::JointTrajectory> goal_handle
+rclcpp_action::GoalResponse TmRos2SctMoveit::handle_goal_joint_trajectory(
+  const rclcpp_action::GoalUUID & uuid, 
+  std::shared_ptr<const control_msgs::action::JointTrajectory::Goal> goal
 ) {
    print_info("TM_ROS: joint trajectory thread begin");
 
@@ -101,7 +96,9 @@ const std::shared_ptr<trajectory_msgs::msg::JointTrajectory> goal_handle
   // //actually, no need to reorder
   // //std::vector<trajectory_msgs::msg::JointTrajectoryPoint> traj_points;
   // //reorder_traj_joints(traj_points, goal_handle->get_goal()->trajectory);
-  // auto &traj_points = goal_handle->get_goal()->trajectory.points;
+  if (goal) {
+      print_info("TM_ROS: trajectory thread end");
+  }
 
   // auto pvts = get_pvt_traj(traj_points, 0.025);
   // print_info("TM_ROS: traj. total time:= %d", (int)pvts->total_time);
@@ -139,6 +136,35 @@ const std::shared_ptr<trajectory_msgs::msg::JointTrajectory> goal_handle
   //   has_goal_ = false;
   // }
   print_info("TM_ROS: trajectory thread end");
+  return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+}
+
+rclcpp_action::CancelResponse TmRos2SctMoveit::handle_cancel_joint_trajectory(
+  const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle)
+{
+  auto goal_id = rclcpp_action::to_string(goal_handle->get_goal_id());
+  print_info("Got request to cancel goal %s", goal_id.c_str());
+  //RCLCPP_INFO_STREAM(node->get_logger(), "Got request to cancel goal " << goal_id);
+  {
+    std::lock_guard<std::mutex> lck(as_mtx_);
+    if (goal_id_.compare(goal_id) == 0 && has_goal_) {
+      has_goal_ = false;
+      iface_.stop_pvt_traj();
+    }
+  }
+  return rclcpp_action::CancelResponse::ACCEPT;
+}
+void TmRos2SctMoveit::handle_accepted_joint_trajectory(
+  std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle)
+{
+  {
+    std::unique_lock<std::mutex> lck(as_mtx_);
+    goal_id_ = rclcpp_action::to_string(goal_handle->get_goal_id());
+    has_goal_ = true;
+  }
+  // this needs to return quickly to avoid blocking the executor, so spin up a new thread
+  // std::thread{std::bind(&TmRos2SctMoveit::execute_traj, this, std::placeholders::_1), goal_handle}.detach();
+
 }
 
 

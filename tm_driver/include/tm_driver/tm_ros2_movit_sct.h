@@ -8,7 +8,7 @@
 class TmRos2SctMoveit : public TmSctRos2{
   private:
     rclcpp_action::Server<control_msgs::action::FollowJointTrajectory>::SharedPtr as_;
-    rclcpp::Subscription<trajectory_msgs::msg::JointTrajectory>::SharedPtr asjt_;
+    rclcpp_action::Server<control_msgs::action::JointTrajectory>::SharedPtr asjt_;
     std::mutex as_mtx_;
     std::string goal_id_;
     bool has_goal_;
@@ -25,8 +25,13 @@ class TmRos2SctMoveit : public TmSctRos2{
       std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
     void execute_traj(
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
-    void execute_joint_traj(
-      const std::shared_ptr<trajectory_msgs::msg::JointTrajectory> trajectory);
+    rclcpp_action::GoalResponse handle_goal_joint_trajectory(
+      const rclcpp_action::GoalUUID & uuid,
+      std::shared_ptr<const control_msgs::action::JointTrajectory::Goal> goal);
+    rclcpp_action::CancelResponse handle_cancel_joint_trajectory(
+      const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle);
+    void handle_accepted_joint_trajectory(
+      std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::JointTrajectory>> goal_handle);
     void reorder_traj_joints(
       std::vector<trajectory_msgs::msg::JointTrajectoryPoint> &new_traj_points,
       const trajectory_msgs::msg::JointTrajectory& traj);
