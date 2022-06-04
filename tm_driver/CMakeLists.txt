@@ -14,8 +14,8 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
-
 add_definitions(-DROS2_BUILD)
+
 
 # Please refer to https://moveit.ros.org/install-moveit2/source
 # If the MoveIt2 module is not ready for installation, or the user wants to close the relative MoveIt2 module, the user can modify the "true" of moveit2_lib_auto_judge to "false" to compile. 
@@ -68,7 +68,6 @@ endif()
 include_directories(include
   ${CMAKE_CURRENT_SOURCE_DIR}
 )
-
 if (moveit2_lib_auto_judge) 
   if (moveit_ros_planning_interface_FOUND)
     add_executable(tm_driver

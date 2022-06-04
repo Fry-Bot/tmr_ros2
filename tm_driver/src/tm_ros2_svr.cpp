@@ -149,6 +149,11 @@ void TmSvrRos2::publish_fbs()
     pm.tool_pose_msg.pose.position.y = pose[1];
     pm.tool_pose_msg.pose.position.z = pose[2];
     pm.tool_pose_msg.pose.orientation = tf2::toMsg(quat);
+    // geometry_msgs::Quaternion quat_msg = tf2::toMsg(quat);
+    // pm.tool_pose_msg.pose.orientation.x = quat_msg.x;
+    // pm.tool_pose_msg.pose.orientation.y = quat_msg.y;
+    // pm.tool_pose_msg.pose.orientation.z = quat_msg.z;
+    // pm.tool_pose_msg.pose.orientation.w = quat_msg.w;
     pm.tool_pose_pub->publish(pm.tool_pose_msg);
 }
 void TmSvrRos2::fake_publisher()
